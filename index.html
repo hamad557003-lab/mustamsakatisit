@@ -2,86 +2,179 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>مستمسكاتي | كل مستمسكاتك بمكان واحد</title>
-<meta name="description" content="تطبيق مستمسكاتي لحفظ وتنظيم مستمسكاتك والوصول إليها بسرعة بأي وقت.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مستمسكاتي | اطبع مستمسكاتك على ورقة A4 واحدة</title>
+<meta name="description" content="برنامج مستمسكاتي: صوّر مستمسكك، يُقصّ ويُرتّب تلقائياً، واطبعه وجهين أو احفظه PDF. صورك تبقى على جهازك.">
+<meta name="theme-color" content="#c8282d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f8fc;--card:#fff;--tx:#14181f;--mu:#5d6675;--pr:#2563eb;--pr2:#7c3aed;--bd:#e4e8f0}
-@media(prefers-color-scheme:dark){:root{--bg:#0d1017;--card:#171b24;--tx:#f2f4f8;--mu:#9aa4b5;--bd:#262c38}}
+:root{--red:#c8282d;--red2:#8f1d1d;--ink:#1c1517;--mu:#6d6063;--paper:#fbf8f7;--card:#fff;--rose:#f8e6e4;--line:#eadfdd}
+@media(prefers-color-scheme:dark){:root{--ink:#f6eeed;--mu:#b3a3a5;--paper:#150f10;--card:#1f1617;--rose:#2b1b1c;--line:#3a2a2c}}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,Tahoma,sans-serif;background:var(--bg);color:var(--tx);line-height:1.7}
-.wrap{max-width:760px;margin:auto;padding:0 18px}
-nav{display:flex;justify-content:space-between;align-items:center;padding:14px 0}
-nav b{font-size:18px}
-nav a{color:var(--pr);text-decoration:none;font-size:14px}
-.hero{background:linear-gradient(135deg,var(--pr),var(--pr2));color:#fff;border-radius:22px;padding:34px 22px;text-align:center;margin:6px 0 22px}
-.hero .ic{font-size:54px}
-.hero h1{margin:6px 0;font-size:30px}
-.hero p{margin:8px auto 20px;max-width:480px;opacity:.95}
-.btn{display:inline-block;background:#fff;color:var(--pr);padding:14px 26px;border-radius:14px;font-weight:700;font-size:17px;text-decoration:none}
-.btn.o{background:transparent;color:#fff;border:2px solid #fff;margin-top:10px;font-size:15px;padding:10px 20px}
-h2{text-align:center;margin:28px 0 14px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.f{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px}
-.f span{font-size:30px}
-.f h3{margin:6px 0 2px;font-size:16px}
-.f p{margin:0;color:var(--mu);font-size:14px}
-.steps{counter-reset:s;display:grid;gap:10px}
-.st{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 14px 14px 14px;display:flex;gap:12px;align-items:center}
-.st::before{counter-increment:s;content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;background:var(--pr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
-.cta{text-align:center;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:24px 16px;margin:26px 0}
-.cta .btn{background:var(--pr);color:#fff}
-footer{text-align:center;color:var(--mu);font-size:13px;padding:20px 0 30px}
-footer a{color:var(--pr);text-decoration:none}
-@media(max-width:420px){.grid{grid-template-columns:1fr}}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Cairo,Tahoma,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.8;padding-bottom:env(safe-area-inset-bottom,0)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px;border-radius:6px}
+.w{max-width:1040px;margin:auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .w{display:flex;align-items:center;gap:22px;height:64px;padding-top:env(safe-area-inset-top,0)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;text-decoration:none}
+.logo i{width:34px;height:34px;border-radius:10px;background:var(--red);display:grid;place-items:center;color:#fff;font-style:normal;font-size:17px}
+nav .l{display:flex;gap:20px;margin-inline-start:auto}
+nav .l a{text-decoration:none;color:var(--mu);font-size:15px;font-weight:600}
+nav .l a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:14px;font:800 16px Cairo,Tahoma,sans-serif;text-decoration:none;border:2px solid var(--red);background:var(--red);color:#fff;cursor:pointer}
+.btn.o{background:transparent;color:var(--red)}
+.btn.s{padding:8px 16px;font-size:14px;border-radius:11px}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:56px 0 64px}
+.hero h1{font-size:clamp(32px,5.4vw,52px);line-height:1.35;margin:0 0 16px;font-weight:800}
+.hero p{font-size:18px;color:var(--mu);margin:0 0 26px;max-width:30em}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.note{margin-top:16px;font-size:14px;color:var(--mu)}
+.sheet{position:relative;aspect-ratio:210/297;max-width:340px;margin:auto;background:#fff;border-radius:6px;box-shadow:0 30px 60px -20px rgba(143,29,29,.45),0 0 0 1px var(--line);padding:9% 8%;display:flex;flex-direction:column;gap:7%;transform:rotate(-2.5deg)}
+.idc{flex:1;border-radius:10px;border:2px solid #d9a5a5;background:linear-gradient(135deg,#fdeeee,#f6d3d3);display:flex;gap:10px;padding:10px;position:relative;max-height:30%}
+.idc .ph{width:30%;border-radius:7px;background:#e3b4b4}
+.idc .ln{flex:1;display:grid;align-content:center;gap:7px}
+.idc .ln span{height:7px;border-radius:4px;background:#d79a9a}
+.idc .ln span:nth-child(2){width:70%}.idc .ln span:nth-child(3){width:50%}
+.idc.b .ph{display:none}
+.idc.b .ln span{height:6px}
+.tag{position:absolute;top:-11px;inset-inline-start:12px;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:1px 10px;border-radius:8px}
+.cut{position:absolute;inset-inline-end:-14px;bottom:18%;background:var(--ink);color:var(--paper);font-size:13px;font-weight:800;padding:6px 14px;border-radius:20px;transform:rotate(3deg)}
+section{padding:56px 0}
+h2{font-size:clamp(26px,4vw,36px);margin:0 0 10px;font-weight:800;line-height:1.4}
+.lead{color:var(--mu);margin:0 0 30px;font-size:17px}
+.feat{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.feat>div{display:flex;gap:16px;padding:22px 4px;border-bottom:1px solid var(--line)}
+.feat>div:nth-child(odd){padding-inline-end:28px}
+.feat>div:nth-child(even){padding-inline-start:28px;border-inline-start:1px solid var(--line)}
+.feat span{font-size:28px;flex:none;width:48px;height:48px;border-radius:14px;background:var(--rose);display:grid;place-items:center}
+.feat h3{margin:0 0 2px;font-size:18px}
+.feat p{margin:0;color:var(--mu);font-size:15px}
+.steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.steps li{counter-increment:s;position:relative;padding-top:54px}
+.steps li::before{content:counter(s);position:absolute;top:0;inset-inline-start:0;width:42px;height:42px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px}
+.steps li::after{content:"";position:absolute;top:21px;inset-inline-start:50px;inset-inline-end:-18px;border-top:2px dashed var(--line)}
+.steps li:last-child::after{display:none}
+.steps b{display:block;font-size:17px}
+.steps span{color:var(--mu);font-size:15px}
+.band{background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;border-radius:26px;padding:44px 28px;text-align:center}
+.band h2{color:#fff}
+.band p{margin:0 auto 24px;max-width:32em;opacity:.93;font-size:17px}
+.btn.wh{background:#fff;color:var(--red2);border-color:#fff}
+details{border-bottom:1px solid var(--line);padding:16px 0}
+details:first-of-type{border-top:1px solid var(--line)}
+summary{cursor:pointer;font-weight:800;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"＋";color:var(--red);font-weight:400}
+details[open] summary::after{content:"－"}
+summary::-webkit-details-marker{display:none}
+details p{margin:10px 0 0;color:var(--mu)}
+footer{border-top:1px solid var(--line);padding:26px 0 34px;color:var(--mu);font-size:14px}
+footer .w{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between}
+footer a{text-decoration:none;color:var(--mu)}
+footer a:hover{color:var(--red)}
+@media(max-width:780px){
+ nav .l{display:none}nav .btn{margin-inline-start:auto}
+ .hero{grid-template-columns:1fr;padding:34px 0 40px;gap:30px;text-align:center}
+ .hero p{margin-inline:auto}.cta{justify-content:center}
+ .sheet{max-width:260px}
+ .feat{grid-template-columns:1fr}
+ .feat>div:nth-child(n){padding-inline:4px;border-inline-start:0}
+ .steps{grid-template-columns:1fr 1fr;gap:30px 18px}
+ .steps li::after{display:none}
+ section{padding:40px 0}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-<nav><b>📁 مستمسكاتي</b><a href="account.html">حسابي / تسجيل الدخول</a></nav>
+<nav><div class="w">
+  <a class="logo" href="#top"><i>🪪</i>مستمسكاتي</a>
+  <div class="l"><a href="#features">المميزات</a><a href="#how">كيف تبدأ</a><a href="#faq">الأسئلة</a></div>
+  <a class="btn s ig" href="#" target="_blank" rel="noopener">اشترك الآن</a>
+</div></nav>
 
-<section class="hero">
-  <div class="ic">🗂️</div>
-  <h1>كل مستمسكاتك بمكان واحد</h1>
-  <p>احفظ مستمسكاتك ورتبها وارجع لها بأي وقت وبضغطة وحدة، بدون ما تدور وتضيع وقتك.</p>
-  <a class="btn dl" href="#">⬇️ حمّل البرنامج مجاناً</a>
-</section>
+<main id="top">
+<div class="w">
+  <section class="hero">
+    <div>
+      <h1>مستمسكاتك كلها على ورقة A4 واحدة، جاهزة للطباعة</h1>
+      <p>صوّر الهوية أو الجنسية أو أي مستمسك، والبرنامج يقصّه ويرتّبه لك تلقائياً. اطبع الوجهين أو احفظه PDF بدقائق.</p>
+      <div class="cta">
+        <a class="btn dl" href="#">⬇️ حمّل البرنامج</a>
+        <a class="btn o ig" href="#" target="_blank" rel="noopener">💬 اشترك عبر انستغرام</a>
+      </div>
+      <div class="note">🔒 صورك تبقى على جهازك ولا تُرفع لأي سيرفر.</div>
+    </div>
+    <div class="sheet" aria-label="مثال لورقة A4 فيها وجها مستمسك">
+      <div class="idc"><span class="tag">الأمامي</span><div class="ph"></div><div class="ln"><span></span><span></span><span></span></div></div>
+      <div class="idc b"><span class="tag">الخلفي</span><div class="ln"><span></span><span></span><span></span><span></span></div></div>
+      <span class="cut">✂️ قصّ تلقائي</span>
+    </div>
+  </section>
 
-<h2>ليش مستمسكاتي؟</h2>
-<section class="grid">
-  <div class="f"><span>📂</span><h3>تنظيم مرتب</h3><p>رتّب مستمسكاتك بمكان واحد بدل ما تكون مبعثرة.</p></div>
-  <div class="f"><span>⚡</span><h3>وصول سريع</h3><p>افتح أي مستمسك تريده بثواني وقت ما تحتاجه.</p></div>
-  <div class="f"><span>📱</span><h3>على موبايلك</h3><p>معك دائماً، وسهل الاستخدام من أي مكان.</p></div>
-  <div class="f"><span>🇮🇶</span><h3>بسيط وبالعربي</h3><p>واجهة سهلة وواضحة لأي شخص.</p></div>
-</section>
+  <section id="features">
+    <h2>كل شي تحتاجه لطباعة مستمسك مرتب</h2>
+    <p class="lead">بدون برامج تصميم وبدون تعب بالقصّ والقياس.</p>
+    <div class="feat">
+      <div><span>📷</span><div><h3>مسح بالكاميرا</h3><p>صوّر المستمسك مباشرة أو اختره من المعرض.</p></div></div>
+      <div><span>✂️</span><div><h3>قصّ وتعديل تلقائي</h3><p>البرنامج يلقى حدود المستمسك ويقصّه، وتكدر تعدّل بإيدك.</p></div></div>
+      <div><span>🪪</span><div><h3>قوالب للمستمسكات العراقية</h3><p>قياسات جاهزة، وتكدر تضيف قالبك الخاص.</p></div></div>
+      <div><span>🧩</span><div><h3>ترتيب تلقائي للورقة</h3><p>يوزّع المستمسكات على الصفحة بأفضل شكل بضغطة وحدة.</p></div></div>
+      <div><span>🖨</span><div><h3>طباعة وجهين</h3><p>الأمامي والخلفي بأمر واحد، أو بالطريقة اليدوية على أي طابعة.</p></div></div>
+      <div><span>📋</span><div><h3>لصق صورة منسوخة</h3><p>انسخ الصورة من واتساب والصقها مباشرة بدون ما تحفظها.</p></div></div>
+    </div>
+  </section>
 
-<h2>كيف تبدأ؟</h2>
-<section class="steps">
-  <div class="st">حمّل البرنامج من الزر</div>
-  <div class="st">سجّل حسابك الجديد</div>
-  <div class="st">فعّل اشتراكك وابدأ استخدام البرنامج</div>
-</section>
+  <section id="how">
+    <h2>كيف تبدأ</h2>
+    <p class="lead">أربع خطوات وتكون جاهز.</p>
+    <ol class="steps">
+      <li><b>اشترك</b><span>تواصل معي على انستغرام، وأعطيك اسم مستخدم وكلمة مرور.</span></li>
+      <li><b>حمّل البرنامج</b><span>ثبّته على جهازك وافتحه.</span></li>
+      <li><b>سجّل دخولك</b><span>اكتب اسم المستخدم وكلمة المرور اللي وصلتك.</span></li>
+      <li><b>صوّر واطبع</b><span>أضف المستمسك، رتّبه، واطبعه أو احفظه PDF.</span></li>
+    </ol>
+  </section>
 
-<section class="cta">
-  <h2 style="margin-top:0">جاهز تبدأ؟</h2>
-  <p style="color:var(--mu)">حمّل البرنامج الحين وخلي مستمسكاتك دائماً بجيبك.</p>
-  <a class="btn dl" href="#">⬇️ تحميل البرنامج</a>
-  <div id="contactBox" style="display:none;margin-top:12px">
-    <a id="contactLink" href="#" style="color:var(--pr)">💬 للاشتراك والاستفسار تواصل معنا</a>
-  </div>
-</section>
+  <section>
+    <div class="band">
+      <h2>للاشتراك أو التجديد تواصل معي</h2>
+      <p>الاشتراك والتجديد يتم عبر انستغرام. ابعث رسالة وأفعّل لك حسابك بنفس اليوم.</p>
+      <a class="btn wh ig" href="#" target="_blank" rel="noopener">💬 تواصل على انستغرام</a>
+    </div>
+  </section>
 
-<footer>© مستمسكاتي · <a href="account.html">حسابي</a></footer>
+  <section id="faq">
+    <h2>أسئلة شائعة</h2>
+    <p class="lead"></p>
+    <details><summary>هل صوري تنرفع على الإنترنت؟</summary><p>لا. معالجة الصور والطباعة تتم على جهازك، وما تنرسل لأي سيرفر.</p></details>
+    <details><summary>شنو يصير إذا انتهى اشتراكي؟</summary><p>البرنامج يوقف ويظهر لك أن الاشتراك انتهى. بمجرد التجديد يشتغل من جديد بنفس الحساب.</p></details>
+    <details><summary>شلون أعرف كم باقي من اشتراكي؟</summary><p>افتح قائمة البرنامج، وتشوف اسم المستخدم وعدد الأيام المتبقية، ومن نفس المكان تكدر تجدد.</p></details>
+    <details><summary>أحتاج إنترنت؟</summary><p>تحتاج اتصال لتسجيل الدخول والتحقق من الاشتراك. بعد ما تدخل، يشتغل البرنامج حتى لو انقطع الإنترنت لفترة قصيرة.</p></details>
+    <details><summary>شلون أجدد الاشتراك؟</summary><p>اضغط «تجديد الاشتراك» داخل البرنامج، أو تواصل معي مباشرة على انستغرام.</p></details>
+  </section>
 </div>
+</main>
+
+<footer><div class="w">
+  <span>© مستمسكاتي</span>
+  <span><a class="ig" href="#" target="_blank" rel="noopener">انستغرام</a> · <a href="account.html">الإدارة</a></span>
+</div></footer>
 
 <script>
 // ====== عدّل هنا فقط ======
 const DOWNLOAD_LINK = "";   // رابط تحميل البرنامج (APK)
-const CONTACT_LINK  = "";   // رابط واتساب/تليجرام للاشتراك (اختياري)، مثال: https://wa.me/964xxxxxxxxxx
+const INSTAGRAM = "https://www.instagram.com/m2qa.m?rpxt=MW90bXVtcnpwOWhhZw==";
 // ==========================
-document.querySelectorAll(".dl").forEach(a=>{ if(DOWNLOAD_LINK) a.href = DOWNLOAD_LINK; else a.onclick = e=>{e.preventDefault();alert("رابط التحميل قريباً");}; });
-if(CONTACT_LINK){ document.getElementById("contactLink").href = CONTACT_LINK; document.getElementById("contactBox").style.display="block"; }
+document.querySelectorAll(".ig").forEach(a=>a.href=INSTAGRAM);
+document.querySelectorAll(".dl").forEach(a=>{
+  if(DOWNLOAD_LINK) a.href = DOWNLOAD_LINK;
+  else a.onclick = e=>{e.preventDefault();alert("رابط التحميل قريباً. للحصول عليه تواصل معي على انستغرام.");};
+});
 </script>
 </body>
-</html>
+        </html>

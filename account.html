@@ -25,7 +25,7 @@ button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:
 </style>
 </head>
 <body>
-<h1>📁 حسابي</h1>
+<h1>📁 حسابي <small style="font-size:12px;color:var(--mu)">v2</small></h1>
 
 <a href="index.html" style="color:var(--pr);text-decoration:none">← الرئيسية</a>
 
@@ -46,6 +46,7 @@ button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:
 </div>
 
 <div id="adminBox" class="hide">
+  <div id="chkBox" class="card hide" style="border-color:var(--rd);color:var(--rd)"></div>
   <div class="card stats">
     <div><b id="cTotal">0</b>المستخدمين</div>
     <div><b id="cActive">0</b>فعّال</div>
@@ -122,6 +123,10 @@ async function load(){
   rows = data || [];
   const d = await sb.rpc("admin_device_info");
   dev = {}; (d.data||[]).forEach(x=>dev[x.username]=x);
+  const g = await sb.rpc("get_latest_update");
+  const bad = [["admin_device_info",d.error],["get_latest_update",g.error]].filter(x=>x[1]);
+  $("chkBox").classList.toggle("hide", !bad.length);
+  $("chkBox").innerHTML = bad.length ? "⚠️ ملف الـ SQL غير مثبّت بشكل صحيح في Supabase:<br>"+bad.map(x=>"• "+x[0]+": "+esc(x[1].message)).join("<br>")+"<br><small>شغّل devices_and_updates.sql كامل في SQL Editor ثم حدّث الصفحة.</small>" : "";
   render(); loadUpdate();
 }
 async function loadUpdate(){
@@ -137,7 +142,7 @@ async function publishUpdate(){
   $("uv").value=$("uu").value=$("un").value=""; $("uf").checked=false; alert("تم نشر التحديث"); loadUpdate();
 }
 function setMax(i){
-  const cur=(dev[rows[i].username]||{}).max_devices||1;
+  const cur=(dev[rows[i].username.toLowerCase()]||{}).max_devices||1;
   const n=+prompt("كم جهاز يكدر يستخدم الحساب "+rows[i].username+"؟",cur);
   if(n>0) call("admin_set_max_devices",{p_username:rows[i].username,p_max:n});
 }
@@ -151,7 +156,7 @@ function render(){
     const r=a[0], i=a[1], d=daysLeft(r), ok=r.is_active&&d>0;
     return `<div class="u"><b>${esc(r.username)}</b>
       <span class="tag" style="background:${ok?'var(--gr)':'var(--rd)'}">${!r.is_active?'ملغي':d>0?'فعّال':'منتهي'}</span><br>
-      <small>باقي: ${Math.max(d,0)} يوم • آخر دخول: ${fmt(r.last_login)} • عدد الدخولات: ${r.login_count||0}<br>📱 الأجهزة: ${(dev[r.username]||{}).device_count||0} / ${(dev[r.username]||{}).max_devices||1}</small><br>
+      <small>باقي: ${Math.max(d,0)} يوم • آخر دخول: ${fmt(r.last_login)} • عدد الدخولات: ${r.login_count||0}<br>📱 الأجهزة: ${(dev[r.username.toLowerCase()]||{}).device_count||0} / ${(dev[r.username.toLowerCase()]||{}).max_devices||1}</small><br>
       <button onclick="ext(${i},30)">+30</button>
       <button onclick="ext(${i},90)">+90</button>
       <button onclick="ext(${i},365)">+سنة</button>
@@ -171,13 +176,19 @@ function ext(i,n){ call("admin_extend",{p_username:rows[i].username,p_days:n}); 
 function act(i){ call("admin_update",{p_username:rows[i].username,p_active:true,p_expires:rows[i].expires_at}); }
 function cancel(i){ if(confirm("تلغي الاشتراك؟")) call("admin_update",{p_username:rows[i].username,p_active:false,p_expires:new Date().toISOString()}); }
 function chpw(i){ const p=prompt("كلمة المرور الجديدة لـ "+rows[i].username); if(p) call("admin_password",{p_username:rows[i].username,p_password:p}); }
-function del(i){ if(confirm("حذف "+rows[i].username+" نهائياً؟")) call("admin_delete",{p_username:rows[i].username}); }
+async function del(i){
+  if(!confirm("حذف "+rows[i].username+" نهائياً؟")) return;
+  const u=rows[i].username, {error}=await sb.rpc("admin_delete",{p_username:u});
+  if(error) return alert(error.message);
+  await sb.rpc("admin_forget_user",{p_username:u}); load();
+}
 async function createUser(){
   const u=$("nu").value.trim(), p=$("npw").value, d=+$("nd").value;
   if(!u||!p||!(d>0)) return alert("اكتب اسم المستخدم وكلمة المرور وعدد الأيام");
   const {error} = await sb.rpc("admin_create",{p_username:u,p_password:p,p_days:d});
   if(error) return alert(error.message);
-  await sb.rpc("admin_set_max_devices",{p_username:u,p_max:+$("nmax").value||1});
+  const m = await sb.rpc("admin_set_max_devices",{p_username:u,p_max:+$("nmax").value||1});
+  if(m.error) alert("انضاف المستخدم لكن تعذر ضبط عدد الأجهزة: "+m.error.message);
   $("nu").value="";$("npw").value="";load();
 }
 sb.auth.onAuthStateChange((ev)=>{ if(ev==="PASSWORD_RECOVERY"){ $("authBox").classList.add("hide"); $("recBox").classList.remove("hide"); } });
@@ -189,4 +200,4 @@ async function setPw(){
 init();
 </script>
 </body>
-</html>
+    </html>

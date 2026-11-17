@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حسابي | مستمسكاتي</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1a1d23;--mu:#6b7280;--pr:#2563eb;--rd:#dc2626;--gr:#16a34a;--bd:#e5e7eb}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#1a1d24;--tx:#f1f3f6;--mu:#9aa3b2;--bd:#2a2f3a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Tahoma,sans-serif;background:var(--bg);color:var(--tx);padding:16px;max-width:720px;margin-inline:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+h1{margin:8px 0}
+input{width:100%;padding:12px;margin:6px 0;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font-size:16px}
+button,.btn{display:inline-block;padding:10px 14px;border:0;border-radius:10px;background:var(--pr);color:#fff;font-size:15px;cursor:pointer;text-decoration:none;margin:3px 0}
+button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:var(--mu)}
+.stats{display:flex;gap:10px}.stats div{flex:1;text-align:center}.stats b{font-size:26px;display:block}
+.u{border-top:1px solid var(--bd);padding:12px 0}
+.u small{color:var(--mu)}
+.tag{padding:2px 8px;border-radius:8px;font-size:13px;color:#fff}
+.hide{display:none}
+#msg{color:var(--rd);min-height:20px}
+</style>
+</head>
+<body>
+<h1>📁 حسابي</h1>
+
+<a href="index.html" style="color:var(--pr);text-decoration:none">← الرئيسية</a>
+
+<div id="authBox" class="card">
+  <h3>تسجيل الدخول</h3>
+  <input id="email" type="email" placeholder="الإيميل" autocomplete="email">
+  <input id="pass" type="password" placeholder="كلمة السر" autocomplete="current-password">
+  <button onclick="login()">دخول</button>
+  <button class="s" onclick="signup()">حساب جديد</button>
+  <button class="s" onclick="resetPw()">نسيت كلمة السر</button>
+  <div id="msg"></div>
+</div>
+
+<div id="recBox" class="card hide"><h3>كلمة سر جديدة</h3><input id="np" type="password" placeholder="كلمة السر الجديدة"><button onclick="setPw()">حفظ</button></div>
+
+<div id="userBox" class="card hide">
+  <div id="me"></div>
+  <button class="s" onclick="logout()">خروج</button>
+</div>
+
+<div id="adminBox" class="hide">
+  <div class="card stats">
+    <div><b id="cTotal">0</b>المستخدمين</div>
+    <div><b id="cActive">0</b>فعّال</div>
+    <div><b id="cExp">0</b>منتهي</div>
+  </div>
+  <div class="card"><input id="q" placeholder="🔍 بحث بالإيميل" oninput="render()"><div id="list"></div></div>
+</div>
+
+<script>
+// ====== عدّل هاي الثلاث فقط ======
+const SUPABASE_URL = "https://tgocnvaozcsgwspsyoyg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_-WmvEIAKLqhSDmrd1pYhjQ_YlUak6ho";
+const ADMIN_EMAIL  = "hamad557003@gmail.com";
+// =================================
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let rows = [];
+const $ = id => document.getElementById(id);
+const say = t => $("msg").textContent = t || "";
+const daysLeft = r => Math.ceil((new Date(r.expires_at) - Date.now()) / 864e5);
+
+async function signup(){
+  const {error} = await sb.auth.signUp({email:$("email").value.trim(),password:$("pass").value});
+  say(error ? error.message : "تم إنشاء الحساب. إذا طلب تأكيد، شوف إيميلك.");
+  if(!error) init();
+}
+async function login(){
+  const {error} = await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("pass").value});
+  say(error ? "الإيميل أو كلمة السر غلط" : ""); if(!error) init();
+}
+async function resetPw(){
+  const e = $("email").value.trim(); if(!e) return say("اكتب الإيميل أول");
+  const {error} = await sb.auth.resetPasswordForEmail(e);
+  say(error ? error.message : "انرسل رابط إعادة التعيين للإيميل");
+}
+async function logout(){ await sb.auth.signOut(); init(); }
+
+async function init(){
+  const {data:{session}} = await sb.auth.getSession();
+  const on = !!session;
+  $("authBox").classList.toggle("hide", on);
+  $("userBox").classList.toggle("hide", !on);
+  $("adminBox").classList.add("hide");
+  if(!on) return;
+  const isAdmin = session.user.email === ADMIN_EMAIL;
+  if(isAdmin){ $("adminBox").classList.remove("hide"); $("me").textContent = "👑 لوحة التحكم"; await load(); }
+  else{
+    const {data} = await sb.from("profiles").select("*").eq("id",session.user.id).single();
+    $("me").textContent = data ? (data.active && daysLeft(data)>0 ? `اشتراكك فعّال، باقي ${daysLeft(data)} يوم` : "اشتراكك منتهي أو ملغي") : "";
+  }
+}
+async function load(){
+  const {data,error} = await sb.from("profiles").select("*").order("created_at",{ascending:false});
+  if(error) return alert(error.message);
+  rows = data; render();
+}
+function render(){
+  const q = $("q").value.toLowerCase();
+  $("cTotal").textContent = rows.length;
+  $("cActive").textContent = rows.filter(r=>r.active&&daysLeft(r)>0).length;
+  $("cExp").textContent = rows.filter(r=>!r.active||daysLeft(r)<=0).length;
+  $("list").innerHTML = rows.filter(r=>(r.email||"").toLowerCase().includes(q)).map(r=>{
+    const d = daysLeft(r), ok = r.active && d>0;
+    return `<div class="u"><b>${r.email}</b>
+      <span class="tag" style="background:${ok?'var(--gr)':'var(--rd)'}">${!r.active?'ملغي':d>0?'فعّال':'منتهي'}</span><br>
+      <small>باقي: ${Math.max(d,0)} يوم</small><br>
+      <button onclick="ext('${r.id}',30)">+30</button>
+      <button onclick="ext('${r.id}',90)">+90</button>
+      <button onclick="ext('${r.id}',365)">+سنة</button>
+      <button class="g" onclick="act('${r.id}')">تفعيل</button>
+      <button class="r" onclick="cancel('${r.id}')">إلغاء</button></div>`;
+  }).join("") || "<small>ماكو مستخدمين</small>";
+}
+async function upd(id,patch){
+  const {error} = await sb.from("profiles").update(patch).eq("id",id);
+  if(error) alert(error.message); else load();
+}
+function ext(id,n){
+  const r = rows.find(x=>x.id===id);
+  const base = Math.max(Date.now(), new Date(r.expires_at).getTime());
+  upd(id,{active:true, expires_at:new Date(base+n*864e5).toISOString()});
+}
+function act(id){ upd(id,{active:true}); }
+function cancel(id){ if(confirm("تلغي الاشتراك؟")) upd(id,{active:false, expires_at:new Date().toISOString()}); }
+sb.auth.onAuthStateChange((ev)=>{ if(ev==="PASSWORD_RECOVERY"){ $("authBox").classList.add("hide"); $("recBox").classList.remove("hide"); } });
+async function setPw(){
+  const {error} = await sb.auth.updateUser({password:$("np").value});
+  if(error) return alert(error.message);
+  alert("تم تغيير كلمة السر"); $("recBox").classList.add("hide"); init();
+}
+init();
+</script>
+</body>
+</html>

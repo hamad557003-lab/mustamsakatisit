@@ -21,6 +21,7 @@ button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:
 .tag{padding:2px 8px;border-radius:8px;font-size:13px;color:#fff}
 .hide{display:none}
 #msg{color:var(--rd);min-height:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 </style>
 </head>
 <body>
@@ -29,11 +30,10 @@ button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:
 <a href="index.html" style="color:var(--pr);text-decoration:none">← الرئيسية</a>
 
 <div id="authBox" class="card">
-  <h3>تسجيل الدخول</h3>
+  <h3>تسجيل دخول الأدمن</h3>
   <input id="email" type="email" placeholder="الإيميل" autocomplete="email">
   <input id="pass" type="password" placeholder="كلمة السر" autocomplete="current-password">
   <button onclick="login()">دخول</button>
-  <button class="s" onclick="signup()">حساب جديد</button>
   <button class="s" onclick="resetPw()">نسيت كلمة السر</button>
   <div id="msg"></div>
 </div>
@@ -51,26 +51,32 @@ button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:
     <div><b id="cActive">0</b>فعّال</div>
     <div><b id="cExp">0</b>منتهي</div>
   </div>
-  <div class="card"><input id="q" placeholder="🔍 بحث بالإيميل" oninput="render()"><div id="list"></div></div>
+
+  <div class="card">
+    <h3>➕ مشترك جديد</h3>
+    <div class="row2">
+      <input id="nu" placeholder="اسم المستخدم" autocapitalize="off" spellcheck="false">
+      <input id="npw" placeholder="كلمة المرور" autocapitalize="off" spellcheck="false">
+    </div>
+    <input id="nd" type="number" min="1" value="30" placeholder="عدد الأيام">
+    <button class="g" onclick="createUser()">إنشاء</button>
+  </div>
+
+  <div class="card"><input id="q" placeholder="🔍 بحث باسم المستخدم" oninput="render()"><div id="list"></div></div>
 </div>
 
 <script>
-// ====== عدّل هاي الثلاث فقط ======
 const SUPABASE_URL = "https://tgocnvaozcsgwspsyoyg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-WmvEIAKLqhSDmrd1pYhjQ_YlUak6ho";
 const ADMIN_EMAIL  = "hamad557003@gmail.com";
-// =================================
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let rows = [];
 const $ = id => document.getElementById(id);
 const say = t => $("msg").textContent = t || "";
 const daysLeft = r => Math.ceil((new Date(r.expires_at) - Date.now()) / 864e5);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = d => d ? new Date(d).toLocaleString("ar-IQ",{dateStyle:"medium",timeStyle:"short"}) : "ما دخل بعد";
 
-async function signup(){
-  const {error} = await sb.auth.signUp({email:$("email").value.trim(),password:$("pass").value});
-  say(error ? error.message : "تم إنشاء الحساب. إذا طلب تأكيد، شوف إيميلك.");
-  if(!error) init();
-}
 async function login(){
   const {error} = await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("pass").value});
   say(error ? "الإيميل أو كلمة السر غلط" : ""); if(!error) init();
@@ -89,46 +95,52 @@ async function init(){
   $("userBox").classList.toggle("hide", !on);
   $("adminBox").classList.add("hide");
   if(!on) return;
-  const isAdmin = session.user.email === ADMIN_EMAIL;
-  if(isAdmin){ $("adminBox").classList.remove("hide"); $("me").textContent = "👑 لوحة التحكم"; await load(); }
-  else{
-    const {data} = await sb.from("profiles").select("*").eq("id",session.user.id).single();
-    $("me").textContent = data ? (data.active && daysLeft(data)>0 ? `اشتراكك فعّال، باقي ${daysLeft(data)} يوم` : "اشتراكك منتهي أو ملغي") : "";
+  if(session.user.email === ADMIN_EMAIL){
+    $("adminBox").classList.remove("hide"); $("me").textContent = "👑 لوحة التحكم"; await load();
+  }else{
+    $("me").textContent = "هذا الحساب ليس أدمن. الاشتراك يتم من البرنامج باسم المستخدم وكلمة المرور.";
   }
 }
 async function load(){
-  const {data,error} = await sb.from("profiles").select("*").order("created_at",{ascending:false});
+  const {data,error} = await sb.rpc("admin_list");
   if(error) return alert(error.message);
-  rows = data; render();
+  rows = data || []; render();
 }
 function render(){
   const q = $("q").value.toLowerCase();
   $("cTotal").textContent = rows.length;
-  $("cActive").textContent = rows.filter(r=>r.active&&daysLeft(r)>0).length;
-  $("cExp").textContent = rows.filter(r=>!r.active||daysLeft(r)<=0).length;
-  $("list").innerHTML = rows.filter(r=>(r.email||"").toLowerCase().includes(q)).map(r=>{
-    const d = daysLeft(r), ok = r.active && d>0;
-    return `<div class="u"><b>${r.email}</b>
-      <span class="tag" style="background:${ok?'var(--gr)':'var(--rd)'}">${!r.active?'ملغي':d>0?'فعّال':'منتهي'}</span><br>
-      <small>باقي: ${Math.max(d,0)} يوم</small><br>
-      <button onclick="ext('${r.id}',30)">+30</button>
-      <button onclick="ext('${r.id}',90)">+90</button>
-      <button onclick="ext('${r.id}',365)">+سنة</button>
-      <button class="g" onclick="act('${r.id}')">تفعيل</button>
-      <button class="r" onclick="cancel('${r.id}')">إلغاء</button></div>`;
+  $("cActive").textContent = rows.filter(r=>r.is_active&&daysLeft(r)>0).length;
+  $("cExp").textContent = rows.filter(r=>!r.is_active||daysLeft(r)<=0).length;
+  $("list").innerHTML = rows.map((r,i)=>[r,i]).filter(a=>(a[0].username||"").toLowerCase().includes(q)).map(a=>{
+    const r=a[0], i=a[1], d=daysLeft(r), ok=r.is_active&&d>0;
+    return `<div class="u"><b>${esc(r.username)}</b>
+      <span class="tag" style="background:${ok?'var(--gr)':'var(--rd)'}">${!r.is_active?'ملغي':d>0?'فعّال':'منتهي'}</span><br>
+      <small>باقي: ${Math.max(d,0)} يوم • آخر دخول: ${fmt(r.last_login)} • عدد الدخولات: ${r.login_count||0}</small><br>
+      <button onclick="ext(${i},30)">+30</button>
+      <button onclick="ext(${i},90)">+90</button>
+      <button onclick="ext(${i},365)">+سنة</button>
+      <button class="g" onclick="act(${i})">تفعيل</button>
+      <button class="r" onclick="cancel(${i})">إلغاء</button>
+      <button class="s" onclick="chpw(${i})">كلمة المرور</button>
+      <button class="r" onclick="del(${i})">حذف</button></div>`;
   }).join("") || "<small>ماكو مستخدمين</small>";
 }
-async function upd(id,patch){
-  const {error} = await sb.from("profiles").update(patch).eq("id",id);
+async function call(fn,args){
+  const {error} = await sb.rpc(fn,args);
   if(error) alert(error.message); else load();
 }
-function ext(id,n){
-  const r = rows.find(x=>x.id===id);
-  const base = Math.max(Date.now(), new Date(r.expires_at).getTime());
-  upd(id,{active:true, expires_at:new Date(base+n*864e5).toISOString()});
+function ext(i,n){ call("admin_extend",{p_username:rows[i].username,p_days:n}); }
+function act(i){ call("admin_update",{p_username:rows[i].username,p_active:true,p_expires:rows[i].expires_at}); }
+function cancel(i){ if(confirm("تلغي الاشتراك؟")) call("admin_update",{p_username:rows[i].username,p_active:false,p_expires:new Date().toISOString()}); }
+function chpw(i){ const p=prompt("كلمة المرور الجديدة لـ "+rows[i].username); if(p) call("admin_password",{p_username:rows[i].username,p_password:p}); }
+function del(i){ if(confirm("حذف "+rows[i].username+" نهائياً؟")) call("admin_delete",{p_username:rows[i].username}); }
+async function createUser(){
+  const u=$("nu").value.trim(), p=$("npw").value, d=+$("nd").value;
+  if(!u||!p||!(d>0)) return alert("اكتب اسم المستخدم وكلمة المرور وعدد الأيام");
+  const {error} = await sb.rpc("admin_create",{p_username:u,p_password:p,p_days:d});
+  if(error) return alert(error.message);
+  $("nu").value="";$("npw").value="";load();
 }
-function act(id){ upd(id,{active:true}); }
-function cancel(id){ if(confirm("تلغي الاشتراك؟")) upd(id,{active:false, expires_at:new Date().toISOString()}); }
 sb.auth.onAuthStateChange((ev)=>{ if(ev==="PASSWORD_RECOVERY"){ $("authBox").classList.add("hide"); $("recBox").classList.remove("hide"); } });
 async function setPw(){
   const {error} = await sb.auth.updateUser({password:$("np").value});
@@ -138,4 +150,4 @@ async function setPw(){
 init();
 </script>
 </body>
-</html>
+      </html>

@@ -58,8 +58,23 @@ button.g{background:var(--gr)}button.r{background:var(--rd)}button.s{background:
       <input id="nu" placeholder="اسم المستخدم" autocapitalize="off" spellcheck="false">
       <input id="npw" placeholder="كلمة المرور" autocapitalize="off" spellcheck="false">
     </div>
-    <input id="nd" type="number" min="1" value="30" placeholder="عدد الأيام">
+    <div class="row2">
+      <input id="nd" type="number" min="1" value="30" placeholder="عدد الأيام">
+      <input id="nmax" type="number" min="1" value="1" placeholder="عدد الأجهزة">
+    </div>
     <button class="g" onclick="createUser()">إنشاء</button>
+  </div>
+
+  <div class="card">
+    <h3>🔔 نشر تحديث للبرنامج</h3>
+    <div class="row2">
+      <input id="uv" placeholder="رقم الإصدار (مثال 1.2.0)" autocapitalize="off">
+      <input id="uu" placeholder="رابط التنزيل" autocapitalize="off" dir="ltr">
+    </div>
+    <input id="un" placeholder="ملاحظات التحديث (اختياري)">
+    <label><input id="uf" type="checkbox" style="width:auto"> تحديث إجباري</label><br>
+    <button class="g" onclick="publishUpdate()">نشر التحديث</button>
+    <div id="lastUpd"><small></small></div>
   </div>
 
   <div class="card"><input id="q" placeholder="🔍 بحث باسم المستخدم" oninput="render()"><div id="list"></div></div>
@@ -70,7 +85,7 @@ const SUPABASE_URL = "https://tgocnvaozcsgwspsyoyg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-WmvEIAKLqhSDmrd1pYhjQ_YlUak6ho";
 const ADMIN_EMAIL  = "hamad557003@gmail.com";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let rows = [];
+let rows = [], dev = {};
 const $ = id => document.getElementById(id);
 const say = t => $("msg").textContent = t || "";
 const daysLeft = r => Math.ceil((new Date(r.expires_at) - Date.now()) / 864e5);
@@ -104,8 +119,29 @@ async function init(){
 async function load(){
   const {data,error} = await sb.rpc("admin_list");
   if(error) return alert(error.message);
-  rows = data || []; render();
+  rows = data || [];
+  const d = await sb.rpc("admin_device_info");
+  dev = {}; (d.data||[]).forEach(x=>dev[x.username]=x);
+  render(); loadUpdate();
 }
+async function loadUpdate(){
+  const {data} = await sb.rpc("get_latest_update");
+  const u = data && data[0];
+  $("lastUpd").innerHTML = u ? "<small>آخر إصدار منشور: "+esc(u.version)+(u.force?" (إجباري)":"")+"</small>" : "";
+}
+async function publishUpdate(){
+  const v=$("uv").value.trim(), url=$("uu").value.trim();
+  if(!v||!/^https?:\/\//.test(url)) return alert("اكتب رقم الإصدار ورابط تنزيل صحيح");
+  const {error} = await sb.rpc("admin_publish_update",{p_version:v,p_url:url,p_notes:$("un").value.trim(),p_force:$("uf").checked});
+  if(error) return alert(error.message);
+  $("uv").value=$("uu").value=$("un").value=""; $("uf").checked=false; alert("تم نشر التحديث"); loadUpdate();
+}
+function setMax(i){
+  const cur=(dev[rows[i].username]||{}).max_devices||1;
+  const n=+prompt("كم جهاز يكدر يستخدم الحساب "+rows[i].username+"؟",cur);
+  if(n>0) call("admin_set_max_devices",{p_username:rows[i].username,p_max:n});
+}
+function resetDev(i){ if(confirm("تصفّر أجهزة "+rows[i].username+"؟ يكدر يسجل بأجهزة جديدة.")) call("admin_reset_devices",{p_username:rows[i].username}); }
 function render(){
   const q = $("q").value.toLowerCase();
   $("cTotal").textContent = rows.length;
@@ -115,13 +151,15 @@ function render(){
     const r=a[0], i=a[1], d=daysLeft(r), ok=r.is_active&&d>0;
     return `<div class="u"><b>${esc(r.username)}</b>
       <span class="tag" style="background:${ok?'var(--gr)':'var(--rd)'}">${!r.is_active?'ملغي':d>0?'فعّال':'منتهي'}</span><br>
-      <small>باقي: ${Math.max(d,0)} يوم • آخر دخول: ${fmt(r.last_login)} • عدد الدخولات: ${r.login_count||0}</small><br>
+      <small>باقي: ${Math.max(d,0)} يوم • آخر دخول: ${fmt(r.last_login)} • عدد الدخولات: ${r.login_count||0}<br>📱 الأجهزة: ${(dev[r.username]||{}).device_count||0} / ${(dev[r.username]||{}).max_devices||1}</small><br>
       <button onclick="ext(${i},30)">+30</button>
       <button onclick="ext(${i},90)">+90</button>
       <button onclick="ext(${i},365)">+سنة</button>
       <button class="g" onclick="act(${i})">تفعيل</button>
       <button class="r" onclick="cancel(${i})">إلغاء</button>
       <button class="s" onclick="chpw(${i})">كلمة المرور</button>
+      <button class="s" onclick="setMax(${i})">عدد الأجهزة</button>
+      <button class="s" onclick="resetDev(${i})">تصفير الأجهزة</button>
       <button class="r" onclick="del(${i})">حذف</button></div>`;
   }).join("") || "<small>ماكو مستخدمين</small>";
 }
@@ -139,6 +177,7 @@ async function createUser(){
   if(!u||!p||!(d>0)) return alert("اكتب اسم المستخدم وكلمة المرور وعدد الأيام");
   const {error} = await sb.rpc("admin_create",{p_username:u,p_password:p,p_days:d});
   if(error) return alert(error.message);
+  await sb.rpc("admin_set_max_devices",{p_username:u,p_max:+$("nmax").value||1});
   $("nu").value="";$("npw").value="";load();
 }
 sb.auth.onAuthStateChange((ev)=>{ if(ev==="PASSWORD_RECOVERY"){ $("authBox").classList.add("hide"); $("recBox").classList.remove("hide"); } });
@@ -150,4 +189,4 @@ async function setPw(){
 init();
 </script>
 </body>
-      </html>
+</html>
